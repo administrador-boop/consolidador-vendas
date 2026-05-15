@@ -905,7 +905,9 @@ function renderChartsMarketplace(todos, agregado) {
         { label: "Shopee", data: top10.map(r => r.shopee), backgroundColor: COLORS_MP["Shopee"] },
         { label: "Mercado Livre", data: top10.map(r => r.ml), backgroundColor: COLORS_MP["Mercado Livre"] },
         { label: "Amazon", data: top10.map(r => r.amazon), backgroundColor: COLORS_MP["Amazon"] },
-        },
+        { label: "Shein", data: top10.map(r => r.shein), backgroundColor: COLORS_MP["Shein"] }
+      ]
+    },
     options: {
       responsive: true, maintainAspectRatio: false, indexAxis: "y",
       plugins: { legend: { position: "bottom" }, tooltip: { mode: "index", intersect: false } },
