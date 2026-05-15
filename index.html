@@ -3,119 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Consolidador Semanal de Vendas</title>
+<title>Consolidador de Vendas — Fast2Buy / Paleguro / VariTudo</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
   * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: #f5f7fa;
-    margin: 0;
-    color: #222;
-  }
-  header {
-    background: #1F4E78;
-    color: white;
-    padding: 24px 32px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+         background: #f5f7fa; margin: 0; color: #222; }
+  header { background: #1F4E78; color: white; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
   header h1 { margin: 0; font-size: 22px; font-weight: 700; }
   header p { margin: 6px 0 0; opacity: 0.85; font-size: 14px; }
-  main {
-    max-width: 1100px;
-    margin: 32px auto;
-    padding: 0 24px;
-  }
-  .card {
-    background: white;
-    border-radius: 12px;
-    padding: 28px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    margin-bottom: 24px;
-  }
-  .dropzone {
-    border: 2px dashed #c0d3e8;
-    border-radius: 12px;
-    padding: 48px 24px;
-    text-align: center;
-    background: #fbfcfd;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .dropzone:hover, .dropzone.dragover {
-    border-color: #1F4E78;
-    background: #eef4fa;
-  }
+  main { max-width: 1150px; margin: 32px auto; padding: 0 24px; }
+  .card { background: white; border-radius: 12px; padding: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 24px; }
+  h2 { color: #1F4E78; font-size: 18px; margin: 0 0 18px; }
+  h3 { color: #1F4E78; font-size: 15px; margin: 24px 0 12px; }
+  .dropzone { border: 2px dashed #c0d3e8; border-radius: 12px; padding: 36px 24px; text-align: center;
+              background: #fbfcfd; cursor: pointer; transition: all 0.15s; }
+  .dropzone:hover, .dropzone.dragover { border-color: #1F4E78; background: #eef4fa; }
+  .dropzone .icon { font-size: 38px; line-height: 1; margin-bottom: 12px; }
   .dropzone strong { color: #1F4E78; }
-  .dropzone p { margin: 8px 0; color: #555; font-size: 14px; }
-  .dropzone .icon { font-size: 42px; line-height: 1; margin-bottom: 12px; }
+  .dropzone p { margin: 6px 0; color: #555; font-size: 14px; }
   input[type=file] { display: none; }
-  .files-list {
-    margin-top: 16px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  .file-card {
-    border: 1px solid #e3e8ee;
-    border-radius: 8px;
-    padding: 14px 16px;
-    background: #fbfcfd;
-    font-size: 13px;
-  }
-  .file-card .source { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
-  .source.upseller { background: #D9E1F2; color: #1F4E78; }
-  .source.shein { background: #FFE2EC; color: #C2185B; }
-  .source.unknown { background: #F4CCCC; color: #C00000; }
-  .file-card .name { word-break: break-all; margin-top: 6px; color: #444; }
-  .btn {
-    display: inline-block;
-    background: #1F4E78;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
+  input[type=text] { padding: 10px 12px; border: 1px solid #c0d3e8; border-radius: 8px;
+                     font-size: 14px; width: 100%; max-width: 360px; }
+  input[type=text]:focus { outline: none; border-color: #1F4E78; }
+  .files-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 18px; }
+  .file-slot { border: 1px solid #e3e8ee; border-radius: 8px; padding: 12px 14px; background: #fbfcfd;
+               font-size: 13px; transition: all 0.2s; }
+  .file-slot.filled { background: #eaf5e8; border-color: #6fbf73; }
+  .file-slot.unknown { background: #fcecec; border-color: #d66; }
+  .file-slot .tag { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+                    font-weight: 600; background: #D9E1F2; color: #1F4E78; margin-bottom: 6px; }
+  .file-slot.filled .tag { background: #c5e8c5; color: #25602b; }
+  .file-slot.unknown .tag { background: #fac5c5; color: #8e2929; }
+  .file-slot .name { word-break: break-all; color: #444; font-size: 12px; }
+  .file-slot .stats { color: #1F4E78; margin-top: 4px; font-weight: 600; font-size: 12px; }
+  .file-slot .remove { float: right; cursor: pointer; color: #999; font-size: 16px; line-height: 1; }
+  .file-slot .remove:hover { color: #c00; }
+  .btn { display: inline-block; background: #1F4E78; color: white; border: none; padding: 12px 24px;
+         border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
   .btn:hover { background: #163d61; }
   .btn:disabled { background: #b9c4d0; cursor: not-allowed; }
   .btn.secondary { background: transparent; color: #1F4E78; border: 1px solid #1F4E78; }
   .btn.secondary:hover { background: #eef4fa; }
-  .actions { display: flex; gap: 12px; align-items: center; margin-top: 20px; }
-  .alert {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin: 16px 0;
-    font-size: 14px;
-  }
+  .actions { display: flex; gap: 12px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
+  .alert { padding: 12px 16px; border-radius: 8px; margin: 12px 0; font-size: 14px; }
   .alert.error { background: #fce8e8; color: #a33; border-left: 4px solid #c00; }
   .alert.info { background: #e8f4ff; color: #155080; border-left: 4px solid #1F4E78; }
-  h2 { color: #1F4E78; font-size: 18px; margin: 0 0 18px; }
-  h3 { color: #1F4E78; font-size: 15px; margin: 24px 0 12px; }
+  .alert.warning { background: #fff8e1; color: #7a5a00; border-left: 4px solid #f5b800; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { background: #1F4E78; color: white; text-align: left; padding: 10px 12px; font-weight: 600; }
   td { padding: 8px 12px; border-bottom: 1px solid #eef2f6; }
-  tr.kit td { background: #E2EFDA; }
   tr.excl td { background: #F4CCCC; }
   tr.total td { background: #D9E1F2; font-weight: bold; }
+  tr.kit td { background: #E2EFDA; }
   .num { text-align: right; font-variant-numeric: tabular-nums; }
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-    margin: 0 0 24px;
-  }
-  .kpi {
-    background: #f9fbfd;
-    border-left: 4px solid #1F4E78;
-    padding: 14px 16px;
-    border-radius: 6px;
-  }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 24px; }
+  .kpi { background: #f9fbfd; border-left: 4px solid #1F4E78; padding: 14px 16px; border-radius: 6px; }
   .kpi .label { font-size: 12px; color: #666; }
   .kpi .value { font-size: 22px; font-weight: 700; color: #1F4E78; margin-top: 4px; }
   .kpi.excl { border-left-color: #c00; }
@@ -123,35 +68,42 @@
   .legend { display: flex; gap: 16px; font-size: 12px; margin-top: 8px; flex-wrap: wrap; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
-  footer {
-    text-align: center;
-    padding: 32px 24px;
-    color: #777;
-    font-size: 12px;
-  }
+  footer { text-align: center; padding: 32px 24px; color: #777; font-size: 12px; }
+  .field-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .field-row label { font-size: 13px; color: #555; font-weight: 600; min-width: 80px; }
   details.regras summary { cursor: pointer; font-weight: 600; color: #1F4E78; padding: 8px 0; }
   details.regras { margin-top: 12px; }
   .small { font-size: 12px; color: #666; }
+  .table-wrap { overflow-x: auto; max-width: 100%; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Consolidador Semanal de Vendas</h1>
-  <p>Fast2Buy / Paleguro / VariTudo · Upseller + Shein · Processamento local no seu navegador</p>
+  <h1>Consolidador de Vendas — Fast2Buy / Paleguro / VariTudo</h1>
+  <p>Cruza relatórios de Amazon, Mercado Livre, Shopee e Shein · processamento 100% no seu navegador</p>
 </header>
 
 <main>
-  <section class="card" id="upload-section">
-    <h2>1. Anexe as planilhas da semana</h2>
-    <p class="small">Arraste ou clique pra escolher os dois arquivos: o relatório do Upseller (Shopee + ML + Amazon) e a Lista de Detalhes do Produto da Shein.</p>
+  <section class="card">
+    <h2>1. Anexe as planilhas dos marketplaces</h2>
+    <p class="small">Aceito formatos: <strong>Amazon</strong> (BusinessReport.csv), <strong>Mercado Livre</strong> (Relatorio_desempenho_publicacoes.xlsx — Fast2Buy + Paleguro), <strong>Shopee</strong> (parentskudetail.xlsx — Fast2Buy + Paleguro), <strong>Shein</strong> (Lista_de_Detalhes_do_Produto.xlsx).</p>
     <label class="dropzone" id="dropzone">
       <div class="icon">📂</div>
-      <p><strong>Arraste 2 arquivos aqui</strong> ou clique para selecionar</p>
-      <p class="small">Formato: .xlsx · Tamanho recomendado: até 5MB cada</p>
-      <input type="file" id="file-input" accept=".xlsx" multiple>
+      <p><strong>Arraste os arquivos aqui</strong> ou clique para selecionar</p>
+      <p class="small">Pode soltar todos de uma vez ou um por um · o sistema identifica automaticamente cada origem</p>
+      <input type="file" id="file-input" accept=".xlsx,.csv" multiple>
     </label>
-    <div class="files-list" id="files-list"></div>
+    <div class="files-grid" id="files-list"></div>
     <div id="upload-msg"></div>
+  </section>
+
+  <section class="card">
+    <h2>2. Período da análise (opcional)</h2>
+    <p class="small">Identifica o intervalo da semana para o relatório final. Exemplo: <code>09/05/2026 a 15/05/2026</code>.</p>
+    <div class="field-row">
+      <label for="periodo-input">Período:</label>
+      <input type="text" id="periodo-input" placeholder="ex: 09/05/2026 a 15/05/2026">
+    </div>
     <div class="actions">
       <button class="btn" id="processar-btn" disabled>Processar e gerar consolidado</button>
       <button class="btn secondary" id="reset-btn" hidden>Recomeçar</button>
@@ -159,63 +111,63 @@
   </section>
 
   <section class="card" id="result-section" hidden>
-    <h2>2. Resumo da semana <span id="periodo" class="small" style="font-weight:normal;color:#666;"></span></h2>
-
+    <h2>3. Resultado <span id="periodo-display" class="small" style="font-weight:normal;color:#666;"></span></h2>
     <div class="summary-grid" id="kpis"></div>
 
     <h3>Total por produto-fornecedor (kits já expandidos)</h3>
-    <div id="tabela-resumo"></div>
+    <div class="table-wrap" id="tabela-resumo"></div>
 
-    <h3>Ranking — top 5</h3>
-    <div id="tabela-top"></div>
+    <h3>Ranking — top 10</h3>
+    <div class="table-wrap" id="tabela-top"></div>
 
-    <h3 style="color:#c00;">Vendas que NÃO entram no pagamento ao fornecedor</h3>
-    <div id="tabela-excl"></div>
+    <h3 style="color:#c00;">Itens excluídos do pagamento ao fornecedor</h3>
+    <div class="table-wrap" id="tabela-excl"></div>
 
     <div class="legend">
       <span><i style="background:#E2EFDA;"></i> Kit (mult &gt; 1)</span>
       <span><i style="background:#F4CCCC;"></i> Não-fornecedor</span>
-      <span><i style="background:#FFF2CC;"></i> Grupo inferido por palavra-chave</span>
     </div>
 
     <details class="regras">
-      <summary>Ver regras de conversão aplicadas</summary>
-      <div class="small" style="margin-top:8px;line-height:1.6;">
-        <strong>BS341 Barra de Apoio:</strong> multiplica pelo nº de barras do kit (SKU 'BS341 - N BARRA' ou nome 'Kit N Barras')<br>
-        <strong>BS338 Caixa Organizador:</strong> multiplica pelo nº de caixas do kit<br>
-        <strong>BS327 Mop / BS328 Refil:</strong> só Mop = 1 Mop · Mop+Refil = 1+1 · só Refil = 1 par<br>
-        <strong>SKU 'BS324 - MOP SPRAY':</strong> reclassificado para BS327 (Mop), não BS324 (Sapateira)<br>
-        <strong>FIG2026 Figurinhas / OUTROS:</strong> excluídos do pagamento<br>
-        <strong>Demais grupos:</strong> 1 venda = 1 unidade fornecedor
+      <summary>Ver regras de classificação aplicadas</summary>
+      <div class="small" style="margin-top:8px;line-height:1.7;">
+        <strong>Identificação do grupo (BS code):</strong> extraído do SKU da variação. Se SKU não tiver BS code, usa o nome do produto.<br>
+        <strong>Multiplicador de kit:</strong> embutido no SKU (ex.: <code>BS341 - 2 BARRA</code> → 2 barras por venda; <code>BS338 - 4 ORG</code> → 4 caixas). Para Amazon (que usa só ASIN), lê o número do nome do anúncio (<code>Kit 2 Barras</code>, <code>Kit 4 Caixa</code>, etc.).<br>
+        <strong>Mop:</strong> SKU contém "MOP" sem "REFIL" → conta como 1 Mop (BS327). SKU "BS327BS328" ou "MOP + REFIL" → 1 Mop + 1 Refil. SKU só "REFIL" → 1 Refil (BS328).<br>
+        <strong>Reclassificações:</strong> SKU "BS324 - MOP SPRAY" da Amazon é Mop (BS327), não Sapateira (BS324).<br>
+        <strong>Excluído do fornecedor:</strong> figurinhas Copa do Mundo (Panini), Mochila Spider, e qualquer item sem código BS identificável.
       </div>
     </details>
 
-    <div class="actions" style="margin-top:24px;">
+    <div class="actions">
       <button class="btn" id="download-btn">⬇ Baixar planilha completa (.xlsx)</button>
-      <button class="btn secondary" onclick="document.getElementById('reset-btn').click()">Processar outra semana</button>
     </div>
   </section>
 
   <section class="card">
     <details>
-      <summary style="cursor:pointer;font-weight:600;color:#1F4E78;">Como usar e dicas</summary>
+      <summary style="cursor:pointer;font-weight:600;color:#1F4E78;">Como usar (dicas semanais)</summary>
       <div class="small" style="margin-top:12px;line-height:1.7;">
-        <p><strong>Janela semanal:</strong> Toda sexta exporto do Upseller as vendas de sábado da semana passada até sexta. O nome do arquivo (<code>...YYYYMMDD-YYYYMMDD...xlsx</code>) já contém a janela e o sistema reconhece automaticamente.</p>
-        <p><strong>Arquivo Shein:</strong> exporto a "Lista de Detalhes do Produto" da plataforma. O sistema considera só produtos com Volume de Vendas &gt; 0.</p>
-        <p><strong>Caso novo:</strong> se um anúncio cair em "OUTROS" (vermelho) ou exibir Mult=1 quando deveria ser kit, abra o .xlsx baixado, identifique o anúncio na aba "Detalhe por Anúncio" e me avise o nome + a regra correta.</p>
-        <p><strong>Privacidade:</strong> nenhum dado é enviado para servidor. Tudo processa no seu navegador.</p>
+        <p><strong>Rotina semanal:</strong> sexta à noite ou sábado bem cedo, exportar os 6 relatórios da semana sáb-sex (Amazon BR · ML Fast2Buy · ML Paleguro · Shopee Fast2Buy · Shopee Paleguro · Shein) e jogar todos aqui.</p>
+        <p><strong>Shopee "Últimos 7 dias":</strong> rodar na sexta à noite — pega exatamente sáb a sex.</p>
+        <p><strong>Caminhos:</strong></p>
+        <ul style="margin-top:4px;line-height:1.7;">
+          <li>Amazon: Seller Central → Relatórios → Relatórios comerciais → Por código ASIN → Vendas e tráfego da página de detalhes por produto child</li>
+          <li>Mercado Livre: Análises → Por anúncio → exportar</li>
+          <li>Shopee: Informações Gerenciais → Produto → Performance do Produto → Últimos 7 dias → exportar (parentskudetail)</li>
+          <li>Shein: Central do Vendedor → Produtos → Lista de Detalhes do Produto → exportar</li>
+        </ul>
+        <p><strong>Privacidade:</strong> nenhum dado é enviado para servidor. Tudo processa local no seu navegador.</p>
       </div>
     </details>
   </section>
 </main>
 
-<footer>
-  Sistema autônomo — funciona offline · 100% no navegador · Léo / Fast2Buy &copy; 2026
-</footer>
+<footer>Sistema autônomo — funciona offline · 100% no navegador · Fast2Buy © 2026</footer>
 
 <script>
 // ============================================================================
-// CONFIGURAÇÃO — grupos de produto
+// GRUPOS DE PRODUTO (BS code → descrição)
 // ============================================================================
 const GRUPOS = {
   "BS105": "Guarda Roupa Dobrável",
@@ -239,97 +191,285 @@ const GRUPOS = {
 const EXCLUI_FORNECEDOR = new Set(["FIG2026", "OUTROS"]);
 const BS_RE = /\bBS\s?(\d{3})/i;
 
-function norm(t) { return (t === null || t === undefined || t === "") ? "" : String(t).toLowerCase(); }
+function norm(t) { return (t == null || t === "") ? "" : String(t).toLowerCase(); }
 
-function detectaGrupo(sku, nome) {
+// ============================================================================
+// CLASSIFICAÇÃO: extrai grupo + multiplicador de SKU e nome
+// ============================================================================
+function classifica(sku, nome) {
   const s = norm(sku), n = norm(nome);
   const blob = s + " | " + n;
-  const m = blob.match(BS_RE);
-  if (m) {
-    const code = "BS" + m[1];
+
+  // Detecta grupo
+  let grupo = null;
+  const bsMatch = blob.match(BS_RE);
+  if (bsMatch) {
+    const code = "BS" + bsMatch[1];
     if (code in GRUPOS) {
-      if (code === "BS324" && (s.includes("mop") || n.includes("mop"))) return ["BS327", false];
-      return [code, false];
+      // Caso especial: "BS324 - MOP SPRAY" → BS327
+      if (code === "BS324" && (s.includes("mop") || n.includes("mop spray"))) {
+        grupo = "BS327";
+      } else {
+        grupo = code;
+      }
     }
   }
-  if (n.includes("árvore de natal") || s.includes("arv-210") || s.includes("210-1000") || blob.includes("1000 galhos")) return ["ARV210", true];
-  if (s.includes("figurinha") || n.includes("figurinha") || n.includes("panini") || n.includes("copa do mundo")) return ["FIG2026", true];
-  if (s.includes("varal") || n.includes("varal")) return ["BS600", true];
-  if (s.includes("guarda roupa dobr") || n.includes("guarda roupa dobr")) return ["BS105", true];
-  if (s.includes("sapateira cabideiro") || (n.includes("sapateira") && (n.includes("4 prateleira") || n.includes("5 prateleira")))) return ["BS324", true];
-  if (s.includes("sapateira 20") || n.includes("sapateira vertical") || n.includes("10 andares")) return ["BS325", true];
-  if (s.includes("4 colunas") || n.includes("4 colunas")) return ["BS336", true];
-  if (s.includes("mop spray") || n.includes("mop spray") || s.trim() === "mop") return ["BS327", true];
-  if (s.includes("refil") && !s.includes("mop")) return ["BS328", true];
-  if (s.includes("guarda sol") || n.includes("guarda sol")) return ["BS332", true];
-  if (s.includes("barra de apoio") || n.includes("barras de apoio") || n.includes("barra de apoio") || n.includes("barra apoio")) return ["BS341", true];
-  if (s.includes("chave de impacto") || n.includes("chave de impacto")) return ["BS340", true];
-  if (s.includes("parafusadeira") || n.includes("parafusadeira") || n.includes("furadeira")) return ["BS339", true];
-  if (n.includes("piscina") && n.includes("180")) return ["BS344", true];
-  if (n.includes("piscina") && n.includes("100")) return ["BS343", true];
-  if (n.includes("organizador de guarda roupas") || n.includes("kit organizador") || s.includes("org - guarda roupa") || s.includes("org guarda roupa")) return ["BS338", true];
-  return ["OUTROS", false];
-}
+  if (!grupo) {
+    // Inferências por nome
+    if (n.includes("árvore de natal") || s.includes("arv-210") || s.includes("210-1000") || blob.includes("1000 galhos")) grupo = "ARV210";
+    else if (s.includes("figurinha") || n.includes("figurinha") || n.includes("panini") || n.includes("copa do mundo") || s.includes("pacotinho") || s.includes("pacote figurinha") || s.includes("pacotes figurinha")) grupo = "FIG2026";
+    else if (s.includes("varal") || n.includes("varal")) grupo = "BS600";
+    else if (s.includes("guarda roupa dobr") || n.includes("guarda roupa dobr")) grupo = "BS105";
+    else if (s.includes("4 colunas") || n.includes("4 colunas")) grupo = "BS336";
+    else if (s.includes("sapateira 20") || n.includes("sapateira vertical") || n.includes("10 andares")) grupo = "BS325";
+    else if (s.includes("sapateira cabideiro") || (n.includes("sapateira") && n.includes("cabideiro")) || (n.includes("sapateira") && (n.includes("4 prateleira") || n.includes("5 prateleira") || n.includes("4 andar")))) grupo = "BS324";
+    else if ((s.includes("mop") && !s.includes("refil")) || (n.includes("mop spray") && !n.includes("refil"))) grupo = "BS327";
+    else if (s.includes("refil") && !s.includes("mop")) grupo = "BS328";
+    else if ((s.includes("mop") && s.includes("refil")) || n.includes("mop + refil") || n.includes("mop+refil")) grupo = "BS327"; // tratado como Mop+Refil abaixo
+    else if (s.includes("guarda sol") || n.includes("guarda sol")) grupo = "BS332";
+    else if (s.includes("barra de apoio") || n.includes("barras de apoio") || n.includes("barra de apoio") || n.includes("barra apoio")) grupo = "BS341";
+    else if (s.includes("chave de impacto") || n.includes("chave de impacto")) grupo = "BS340";
+    else if (s.includes("parafusadeira") || n.includes("parafusadeira") || n.includes("furadeira")) grupo = "BS339";
+    else if (n.includes("piscina") && n.includes("180")) grupo = "BS344";
+    else if (n.includes("piscina") && n.includes("100")) grupo = "BS343";
+    else if (n.includes("organizador de guarda roupas") || n.includes("kit organizador") || s.includes("org - guarda roupa") || s.includes("org guarda roupa") || s.includes("organizador")) grupo = "BS338";
+    else if (n.includes("mochila") || s.includes("mochila")) grupo = "OUTROS";
+    else grupo = "OUTROS";
+  }
 
-function inferMultiplicador(grupo, sku, nome) {
-  const s = norm(sku), n = norm(nome);
+  // Multiplicador
+  let mult = 1, refilExtra = 0, regra = "1:1";
+
   if (grupo === "BS341") {
     let m = s.match(/bs341\s*-\s*(\d+)\s*barra/);
-    if (m) return [parseInt(m[1]), 0, `SKU '${m[0].toUpperCase()}' → ${m[1]} barra(s)`];
-    m = n.match(/kit\s+(\d+)\s+barra/);
-    if (m) return [parseInt(m[1]), 0, `Nome 'Kit ${m[1]} Barra(s)'`];
-    for (const [palavra, mult] of [["kit duas barras", 2], ["kit três barras", 3], ["kit tres barras", 3], ["kit quatro barras", 4]]) {
-      if (n.includes(palavra)) return [mult, 0, `Nome '${palavra}'`];
-    }
-    if (/\b(barra|barras)\b/.test(n) && !n.includes("kit")) return [1, 0, "Nome singular sem 'Kit' → 1 unidade"];
-    return [1, 0, "Default 1 barra"];
-  }
-  if (grupo === "BS338") {
+    if (m) { mult = parseInt(m[1]); regra = `SKU '${m[0].toUpperCase()}'`; }
+    else if ((m = n.match(/kit\s+(\d+)\s+barra/))) { mult = parseInt(m[1]); regra = `Nome 'Kit ${m[1]} Barras'`; }
+    else if (n.includes("kit duas barras") || n.includes("kit duas barra")) { mult = 2; regra = "Nome 'Kit Duas Barras'"; }
+    else if (n.includes("kit três barras") || n.includes("kit tres barras")) { mult = 3; regra = "Nome 'Kit Três Barras'"; }
+    else if (n.includes("kit quatro barras")) { mult = 4; regra = "Nome 'Kit Quatro Barras'"; }
+    else { mult = 1; regra = "Default 1 barra"; }
+  } else if (grupo === "BS338") {
     let m = s.match(/bs338\s*-\s*(\d+)\s*org/);
-    if (m) return [parseInt(m[1]), 0, `SKU 'BS338 - ${m[1]} ORG'`];
-    m = n.match(/kit\s+(\d+)\s+caixa/);
-    if (m) return [parseInt(m[1]), 0, `Nome 'Kit ${m[1]} Caixa(s)'`];
-    if (n.includes("kit organizador")) return [1, 0, "Nome 'Kit Organizador' (qtd não especificada) → 1"];
-    return [1, 0, "Default 1 organizador"];
+    if (m) { mult = parseInt(m[1]); regra = `SKU 'BS338 - ${m[1]} ORG'`; }
+    else if ((m = n.match(/kit\s+(\d+)\s+caixa/))) { mult = parseInt(m[1]); regra = `Nome 'Kit ${m[1]} Caixas'`; }
+    else { mult = 1; regra = "Default 1 caixa"; }
+  } else if (grupo === "BS327" || grupo === "BS328") {
+    if (s.replace(/ /g, "").includes("bs327bs328") || n.includes("mop + refil") || n.includes("mop+refil") || (s.includes("mop") && s.includes("refil"))) {
+      mult = 1; refilExtra = 1; regra = "Mop + Refil → 1 Mop + 1 Refil";
+    } else if (grupo === "BS328" || (/^refil/.test(s) && !s.includes("mop"))) {
+      mult = 0; refilExtra = 1; regra = "Só Refil → 1 Refil (1 par)"; grupo = "BS327"; // ajuste: linha refil-extra é tratada separadamente
+    } else {
+      mult = 1; refilExtra = 0; regra = "Só Mop → 1 Mop";
+    }
+  } else if (EXCLUI_FORNECEDOR.has(grupo)) {
+    mult = 0; refilExtra = 0; regra = "Excluído do fornecedor";
   }
-  if (grupo === "BS327" || grupo === "BS328") {
-    if (s.replace(/ /g,"").includes("bs327bs328") || n.includes("mop + refil") || n.includes("mop+refil")) return [1, 1, "Mop + Refil → 1 Mop + 1 Refil"];
-    if (grupo === "BS328" || (/^refil/.test(s) && !s.includes("mop"))) return [0, 1, "Só Refil → 1 Refil fornecedor (1 par)"];
-    return [1, 0, "Só Mop → 1 Mop"];
-  }
-  if (grupo === "FIG2026") return [0, 0, "Figurinhas — não conta no pagamento do fornecedor"];
-  if (grupo === "OUTROS") return [0, 0, "Outros — não conta no pagamento do fornecedor"];
-  return [1, 0, "1 unidade por venda"];
+
+  return { grupo, mult, refilExtra, regra };
 }
 
 // ============================================================================
-// LEITURA DOS XLSX
+// DETECÇÃO DO TIPO DE ARQUIVO
 // ============================================================================
-function detectarTipo(workbook) {
-  const ws = workbook.Sheets[workbook.SheetNames[0]];
-  const headers = (XLSX.utils.sheet_to_json(ws, { header: 1, range: 0 })[0] || []).map(String);
-  const set = new Set(headers);
-  if (["Produtos", "Loja", "SKU Principal", "Unidades Vendidas"].every(h => set.has(h))) return "upseller";
-  if (["SKC", "Fornecedor SKU", "Volume de Vendas"].every(h => set.has(h))) return "shein";
+function detectarFormato(workbook, fileName) {
+  const lower = (fileName || "").toLowerCase();
+  // Amazon BusinessReport
+  if (lower.includes("businessreport")) return "amazon";
+  // Shopee parentskudetail
+  if (lower.includes("parentskudetail")) return "shopee";
+  // ML Relatório de Vendas / Publicações
+  if (lower.includes("relatorio_desempenho_publicac")) return "ml";
+  // Shein Lista de Detalhes do Produto
+  if (lower.includes("lista_de_detalhes") || lower.includes("listadedetalhes")) return "shein";
+  // Tenta detectar pelos cabeçalhos
+  try {
+    const ws = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 0, defval: "" });
+    // procura nas primeiras 10 linhas
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const row = (rows[i] || []).map(v => String(v).toLowerCase());
+      const blob = row.join(" | ");
+      if (blob.includes("asin (parent)") || blob.includes("asin (child)") || blob.includes("unidades pedidas")) return "amazon";
+      if (blob.includes("sku da variação") || blob.includes("sku da variacao") || blob.includes("sku principle")) return "shopee";
+      if (blob.includes("id do anúncio") && blob.includes("variação") && blob.includes("sku")) return "ml";
+      if (blob.includes("skc") && blob.includes("fornecedor sku") && blob.includes("volume de vendas")) return "shein";
+    }
+  } catch (e) {}
   return null;
 }
 
-function janelaSemanal(nome) {
-  const m = nome.match(/(\d{8})-(\d{8})/);
-  if (!m) return ["", ""];
-  const ini = m[1], fim = m[2];
-  return [
-    `${ini.slice(6,8)}/${ini.slice(4,6)}/${ini.slice(0,4)} a ${fim.slice(6,8)}/${fim.slice(4,6)}/${fim.slice(0,4)}`,
-    `${ini}-${fim}`,
-  ];
+// ============================================================================
+// PARSERS POR FORMATO
+// ============================================================================
+function parseFloatBR(v) {
+  if (v == null || v === "" || v === "-") return 0;
+  if (typeof v === "number") return v;
+  let s = String(v).replace(/[R$\s]/g, "").trim();
+  // Se tem "," como decimal (formato BR)
+  if (/,\d+$/.test(s) && !/\.\d+,/.test(s)) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else {
+    s = s.replace(/,/g, "");
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function parseIntBR(v) {
+  if (v == null || v === "" || v === "-") return 0;
+  if (typeof v === "number") return Math.round(v);
+  let s = String(v).replace(/[^\d-]/g, "");
+  const n = parseInt(s);
+  return isNaN(n) ? 0 : n;
 }
 
-function readXlsx(file) {
+// Amazon BusinessReport (CSV)
+function parseAmazon(workbook, fileName) {
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws);
+  return rows.map(r => {
+    const titulo = r["Título"] || r["Title"] || "";
+    const asin = r["ASIN (child)"] || r["ASIN(child)"] || r["ASIN (parent)"] || "";
+    const unidades = parseIntBR(r["Unidades pedidas"] || r["Units Ordered"]);
+    const faturamento = parseFloatBR(r["Vendas de produtos pedidos"] || r["Ordered Product Sales"]);
+    const c = classifica("", titulo);
+    return {
+      origem: "Amazon", conta: "Fast2Buy", arquivo: fileName,
+      grupo: c.grupo, mult: c.mult, refilExtra: c.refilExtra, regra: c.regra,
+      idAnuncio: asin, sku: "", produto: titulo,
+      variante: "", unidades, faturamento,
+    };
+  }).filter(r => r.unidades > 0);
+}
+
+// Mercado Livre (xlsx)
+function parseML(workbook, fileName) {
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  // Encontra a linha de header (procura "ID do anúncio")
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(15, data.length); i++) {
+    const row = data[i] || [];
+    if (row.some(c => String(c).toLowerCase().includes("id do anúncio"))) {
+      headerRow = i; break;
+    }
+  }
+  if (headerRow < 0) return [];
+  const headers = data[headerRow].map(c => String(c).trim());
+  const col = name => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const colIdAnuncio = col("ID do anúncio");
+  const colAnuncio = col("Anúncio");
+  const colVariacao = col("Variação");
+  const colSku = col("SKU");
+  const colUnidades = col("Unidades vendidas");
+  const colVendas = col("Vendas brutas (BRL)");
+
+  // Detectar conta: se nome do arquivo tem indicação ou padrão "(1)" = Paleguro
+  let conta = "Fast2Buy";
+  if (fileName.match(/\(\d+\)/) || fileName.toLowerCase().includes("paleguro")) {
+    conta = "Paleguro";
+  }
+
+  const out = [];
+  for (let i = headerRow + 1; i < data.length; i++) {
+    const row = data[i] || [];
+    const idAnuncio = String(row[colIdAnuncio] || "").trim();
+    if (!idAnuncio || idAnuncio === "Valores totais do período") continue;
+    const sku = String(row[colSku] || "").trim();
+    const produto = String(row[colAnuncio] || "").trim();
+    const variante = String(row[colVariacao] || "").trim();
+    const unidades = parseIntBR(row[colUnidades]);
+    const faturamento = parseFloatBR(row[colVendas]);
+    if (unidades === 0) continue;
+    const c = classifica(sku, produto + " " + variante);
+    out.push({
+      origem: "Mercado Livre", conta, arquivo: fileName,
+      grupo: c.grupo, mult: c.mult, refilExtra: c.refilExtra, regra: c.regra,
+      idAnuncio, sku, produto, variante, unidades, faturamento,
+    });
+  }
+  return out;
+}
+
+// Shopee parentskudetail (xlsx)
+function parseShopee(workbook, fileName) {
+  // Aba que importa: "Produtos com Melhor Desempenho"
+  const sheetName = workbook.SheetNames.find(n => n.toLowerCase().includes("melhor desempenho")) || workbook.SheetNames[0];
+  const ws = workbook.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  if (data.length < 2) return [];
+  const headers = data[0].map(c => String(c).trim());
+  const col = name => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+  const colIdItem = col("ID do Item");
+  const colProduto = col("Produto");
+  const colIdVar = col("ID da Variação");
+  const colNomeVar = col("Nome da Variação");
+  const colSkuVar = col("SKU da Variação");
+  const colSkuPrincipal = col("SKU Principle");
+  const colUnidadesPago = col("Unidades (Pedido pago)");
+  const colUnidadesRealizado = col("Unidades (Pedido realizado)");
+  const colVendasPago = col("Vendas (Pedido pago) (BRL)");
+  const colVendasRealizado = col("Vendas (Pedido realizado) (BRL)");
+
+  let conta = "Fast2Buy";
+  if (fileName.match(/\(\d+\)/) || fileName.toLowerCase().includes("paleguro")) {
+    conta = "Paleguro";
+  }
+
+  const out = [];
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i] || [];
+    const idVar = String(row[colIdVar] || "").trim();
+    // Pular linhas-resumo (variação = "-")
+    if (!idVar || idVar === "-") continue;
+    const idItem = String(row[colIdItem] || "").trim();
+    const produto = String(row[colProduto] || "").trim();
+    const variante = String(row[colNomeVar] || "").trim();
+    const sku = String(row[colSkuVar] || row[colSkuPrincipal] || "").trim();
+    // Prefere pedido pago, fallback pedido realizado
+    const unidades = parseIntBR(row[colUnidadesPago] || row[colUnidadesRealizado]);
+    const faturamento = parseFloatBR(row[colVendasPago] || row[colVendasRealizado]);
+    if (unidades === 0) continue;
+    const c = classifica(sku, produto + " " + variante);
+    out.push({
+      origem: "Shopee", conta, arquivo: fileName,
+      grupo: c.grupo, mult: c.mult, refilExtra: c.refilExtra, regra: c.regra,
+      idAnuncio: idItem, sku, produto, variante, unidades, faturamento,
+    });
+  }
+  return out;
+}
+
+// Shein Lista de Detalhes
+function parseShein(workbook, fileName) {
+  const ws = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws);
+  return rows
+    .filter(r => parseIntBR(r["Volume de Vendas"]) > 0)
+    .map(r => {
+      const sku = String(r["Fornecedor SKU"] || "").trim();
+      const produto = String(r["Nome do produto"] || "").trim();
+      const idAnuncio = String(r["SKC"] || "").trim();
+      const unidades = parseIntBR(r["Volume de Vendas"]);
+      const faturamento = parseFloatBR(r["Gross Merchandise Value"]);
+      const c = classifica(sku, produto);
+      return {
+        origem: "Shein", conta: "Fast2Buy", arquivo: fileName,
+        grupo: c.grupo, mult: c.mult, refilExtra: c.refilExtra, regra: c.regra,
+        idAnuncio, sku, produto, variante: "", unidades, faturamento,
+      };
+    });
+}
+
+// ============================================================================
+// LEITURA DE ARQUIVO
+// ============================================================================
+function lerArquivo(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
       try {
-        const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: "array", cellDates: true });
         resolve(wb);
       } catch (err) { reject(err); }
     };
@@ -338,164 +478,117 @@ function readXlsx(file) {
   });
 }
 
-function processaUpseller(wb) {
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws);
-  return rows.map(r => {
-    const loja = String(r["Loja"] || "");
-    const mpMatch = loja.match(/\[(.*?)\]/);
-    let marketplace = mpMatch ? mpMatch[1].replace(" BR","").trim() : "";
-    if (marketplace === "Mercado Libre") marketplace = "Mercado Livre";
-    const contaMatch = loja.match(/^(.*?)\s*-/);
-    const conta = contaMatch ? contaMatch[1].trim() : "";
-    const [grupo, inferido] = detectaGrupo(r["SKU Principal"], r["Produtos"]);
-    const [mult, refilExtra, regra] = inferMultiplicador(grupo, r["SKU Principal"], r["Produtos"]);
-    const unidades = Number(r["Unidades Vendidas"] || 0);
-    const pedidos = Number(r["Pedidos Válidos"] || 0);
-    const faturamento = Number(r["Pagamentos Recebidos"] || 0);
-    return {
-      grupo, inferido, mult, refilExtra, regra,
-      marketplace, conta,
-      produto: r["Produtos"] || "",
-      sku: r["SKU Principal"] || "",
-      idAnuncio: String(r["ID do Anúncios"] || ""),
-      pedidos, unidades, faturamento,
-      precoMedio: Number(r["Preço Médio"] || 0),
-      unFornecedor: unidades * mult,
-      unRefilExtra: unidades * refilExtra,
-      incluiPagamento: !EXCLUI_FORNECEDOR.has(grupo),
-    };
-  });
-}
-
-function processaShein(wb) {
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws).filter(r => Number(r["Volume de Vendas"] || 0) > 0);
-  return rows.map(r => {
-    const [grupo, inferido] = detectaGrupo(r["Fornecedor SKU"], r["Nome do produto"]);
-    const [mult, refilExtra, regra] = inferMultiplicador(grupo, r["Fornecedor SKU"], r["Nome do produto"]);
-    const unidades = Number(r["Volume de Vendas"] || 0);
-    const faturamento = Number(r["Gross Merchandise Value"] || 0);
-    return {
-      grupo, inferido, mult, refilExtra, regra,
-      marketplace: "Shein",
-      conta: "Shein",
-      produto: r["Nome do produto"] || "",
-      sku: r["Fornecedor SKU"] || "",
-      idAnuncio: r["SKC"] || "",
-      pedidos: unidades,
-      unidades, faturamento,
-      precoMedio: unidades > 0 ? +(faturamento / unidades).toFixed(2) : 0,
-      unFornecedor: unidades * mult,
-      unRefilExtra: unidades * refilExtra,
-      incluiPagamento: !EXCLUI_FORNECEDOR.has(grupo),
-    };
-  });
-}
-
 // ============================================================================
-// PIVOT / AGREGAÇÃO
+// CONSOLIDAÇÃO
 // ============================================================================
-function agregaFornecedor(todos) {
-  // Expande Mop+Refil em duas linhas (uma BS327, outra BS328)
-  const linhas = [];
+function consolidar(todos) {
+  // Calcula unFornecedor para cada linha
   for (const r of todos) {
-    if (EXCLUI_FORNECEDOR.has(r.grupo)) continue;
-    linhas.push({ grupo: r.grupo, marketplace: r.marketplace, un: r.unFornecedor, fat: r.faturamento });
+    r.unFornecedor = r.unidades * r.mult;
+    r.unRefilExtra = r.unidades * r.refilExtra;
+    r.incluiPagamento = !EXCLUI_FORNECEDOR.has(r.grupo);
+  }
+
+  // Agrega por grupo × marketplace (incluindo Refil extra como linha BS328)
+  const piv = {};
+  const MARKETPLACES = ["Shopee", "Mercado Livre", "Amazon", "Shein"];
+  for (const r of todos) {
+    if (!r.incluiPagamento) continue;
+    if (!piv[r.grupo]) piv[r.grupo] = { totals: {}, total: 0, fat: 0 };
+    piv[r.grupo].totals[r.origem] = (piv[r.grupo].totals[r.origem] || 0) + r.unFornecedor;
+    piv[r.grupo].total += r.unFornecedor;
+    piv[r.grupo].fat += r.faturamento;
     if (r.refilExtra > 0) {
-      linhas.push({ grupo: "BS328", marketplace: r.marketplace, un: r.unRefilExtra, fat: 0 });
+      if (!piv["BS328"]) piv["BS328"] = { totals: {}, total: 0, fat: 0 };
+      piv["BS328"].totals[r.origem] = (piv["BS328"].totals[r.origem] || 0) + r.unRefilExtra;
+      piv["BS328"].total += r.unRefilExtra;
     }
   }
-  const MARKETPLACES = ["Shopee","Mercado Livre","Amazon","Shein"];
-  const piv = {};
-  for (const l of linhas) {
-    if (!piv[l.grupo]) piv[l.grupo] = { Shopee:0, "Mercado Livre":0, Amazon:0, Shein:0, total:0, fat:0 };
-    piv[l.grupo][l.marketplace] = (piv[l.grupo][l.marketplace] || 0) + l.un;
-    piv[l.grupo].total += l.un;
-    piv[l.grupo].fat += l.fat;
-  }
-  const lista = Object.entries(piv).map(([grupo, v]) => ({
-    grupo, descricao: GRUPOS[grupo],
-    shopee: v.Shopee, ml: v["Mercado Livre"], amazon: v.Amazon, shein: v.Shein,
-    total: v.total, faturamento: v.fat,
-  }));
-  lista.sort((a,b) => b.total - a.total);
-  return lista;
+  const agregado = Object.entries(piv).map(([grupo, v]) => ({
+    grupo, descricao: GRUPOS[grupo] || grupo,
+    shopee: v.totals["Shopee"] || 0,
+    ml: v.totals["Mercado Livre"] || 0,
+    amazon: v.totals["Amazon"] || 0,
+    shein: v.totals["Shein"] || 0,
+    total: v.total,
+    faturamento: v.fat,
+  })).filter(r => r.total > 0).sort((a, b) => b.total - a.total);
+
+  return agregado;
 }
 
 // ============================================================================
-// GERAÇÃO DO XLSX (ExcelJS)
+// GERAÇÃO DO .XLSX
 // ============================================================================
-async function gerarXlsx(todos, agregado, janela) {
+async function gerarXlsx(todos, agregado, periodo) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Consolidador Léo / Fast2Buy";
+  wb.creator = "Consolidador Fast2Buy";
   wb.created = new Date();
 
-  const HDR_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FF1F4E78'} };
-  const HDR_FONT = { name:'Arial', bold:true, color:{argb:'FFFFFFFF'}, size:11 };
-  const TOTAL_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFD9E1F2'} };
-  const KIT_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFE2EFDA'} };
-  const EXCL_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFF4CCCC'} };
-  const INFER_FILL = { type:'pattern', pattern:'solid', fgColor:{argb:'FFFFF2CC'} };
-  const BORDER = { top:{style:'thin',color:{argb:'FFBFBFBF'}}, left:{style:'thin',color:{argb:'FFBFBFBF'}},
-                    bottom:{style:'thin',color:{argb:'FFBFBFBF'}}, right:{style:'thin',color:{argb:'FFBFBFBF'}} };
-
-  const styleHeader = (row, ncols) => {
-    for (let c = 1; c <= ncols; c++) {
+  const HDR_FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E78" } };
+  const HDR_FONT = { name: "Arial", bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+  const TOTAL_FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD9E1F2" } };
+  const KIT_FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2EFDA" } };
+  const EXCL_FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4CCCC" } };
+  const BORDER = {
+    top: { style: "thin", color: { argb: "FFBFBFBF" } },
+    left: { style: "thin", color: { argb: "FFBFBFBF" } },
+    bottom: { style: "thin", color: { argb: "FFBFBFBF" } },
+    right: { style: "thin", color: { argb: "FFBFBFBF" } },
+  };
+  const styleHdr = (row, n) => {
+    for (let c = 1; c <= n; c++) {
       const cell = row.getCell(c);
-      cell.fill = HDR_FILL;
-      cell.font = HDR_FONT;
-      cell.alignment = { horizontal:'center', vertical:'center' };
+      cell.fill = HDR_FILL; cell.font = HDR_FONT;
+      cell.alignment = { horizontal: "center", vertical: "center" };
       cell.border = BORDER;
     }
   };
 
-  // ===== Aba 1: Top Fornecedor =====
+  // ===== Aba Top Fornecedor =====
   const wsTop = wb.addWorksheet("Top Fornecedor");
   wsTop.getCell("A1").value = "Ranking — Unidades a pagar ao Fornecedor";
-  wsTop.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
+  wsTop.getCell("A1").font = { name: "Arial", bold: true, size: 14, color: { argb: "FF1F4E78" } };
   wsTop.mergeCells("A1:G1");
-  wsTop.getCell("A2").value = `Semana ${janela}. Kits expandidos em unidades de fornecedor.`;
-  wsTop.getCell("A2").font = { name:'Arial', italic:true, size:10, color:{argb:'FF595959'} };
+  wsTop.getCell("A2").value = `Período: ${periodo || "(não informado)"}`;
+  wsTop.getCell("A2").font = { name: "Arial", italic: true, size: 10, color: { argb: "FF595959" } };
   wsTop.mergeCells("A2:G2");
   const topHdr = wsTop.getRow(4);
-  topHdr.values = ["#","Grupo (SKU)","Descrição","Un. Fornecedor","% das Unidades","Faturamento (R$)","% do Faturamento"];
-  styleHeader(topHdr, 7);
-  const totalUn = agregado.reduce((s,r)=>s+r.total,0);
-  const totalFat = agregado.reduce((s,r)=>s+r.faturamento,0);
+  topHdr.values = ["#", "Grupo (SKU)", "Descrição", "Un. Fornecedor", "% das Unidades", "Faturamento (R$)", "% do Faturamento"];
+  styleHdr(topHdr, 7);
+  const totalUn = agregado.reduce((s, r) => s + r.total, 0);
+  const totalFat = agregado.reduce((s, r) => s + r.faturamento, 0);
   agregado.forEach((r, i) => {
-    const row = wsTop.addRow([i+1, r.grupo, r.descricao, r.total,
-      totalUn > 0 ? r.total/totalUn : 0, r.faturamento, totalFat > 0 ? r.faturamento/totalFat : 0]);
+    const row = wsTop.addRow([i + 1, r.grupo, r.descricao, r.total,
+      totalUn ? r.total / totalUn : 0, r.faturamento, totalFat ? r.faturamento / totalFat : 0]);
     row.getCell(4).numFmt = "#,##0";
     row.getCell(5).numFmt = "0.0%";
     row.getCell(6).numFmt = '"R$" #,##0.00';
     row.getCell(7).numFmt = "0.0%";
     for (let c = 1; c <= 7; c++) row.getCell(c).border = BORDER;
   });
-  const totalRow = wsTop.addRow(["", "TOTAL", "", totalUn, 1, totalFat, 1]);
-  totalRow.getCell(4).numFmt = "#,##0";
-  totalRow.getCell(5).numFmt = "0.0%";
-  totalRow.getCell(6).numFmt = '"R$" #,##0.00';
-  totalRow.getCell(7).numFmt = "0.0%";
+  const tr = wsTop.addRow(["", "TOTAL", "", totalUn, 1, totalFat, 1]);
+  tr.getCell(4).numFmt = "#,##0"; tr.getCell(5).numFmt = "0.0%";
+  tr.getCell(6).numFmt = '"R$" #,##0.00'; tr.getCell(7).numFmt = "0.0%";
   for (let c = 1; c <= 7; c++) {
-    totalRow.getCell(c).fill = TOTAL_FILL;
-    totalRow.getCell(c).font = { name:'Arial', bold:true, size:11 };
-    totalRow.getCell(c).border = BORDER;
+    tr.getCell(c).fill = TOTAL_FILL;
+    tr.getCell(c).font = { name: "Arial", bold: true, size: 11 };
+    tr.getCell(c).border = BORDER;
   }
-  wsTop.columns = [{width:5},{width:12},{width:38},{width:14},{width:14},{width:18},{width:18}];
-  wsTop.views = [{state:'frozen', ySplit:4}];
+  wsTop.columns = [{ width: 5 }, { width: 12 }, { width: 38 }, { width: 14 }, { width: 14 }, { width: 18 }, { width: 18 }];
+  wsTop.views = [{ state: "frozen", ySplit: 4 }];
 
-  // ===== Aba 2: Resumo Fornecedor =====
+  // ===== Aba Resumo Fornecedor =====
   const wsRes = wb.addWorksheet("Resumo Fornecedor");
   wsRes.getCell("A1").value = "Vendas Consolidadas — Pagamento ao Fornecedor";
-  wsRes.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
+  wsRes.getCell("A1").font = { name: "Arial", bold: true, size: 14, color: { argb: "FF1F4E78" } };
   wsRes.mergeCells("A1:H1");
-  wsRes.getCell("A2").value = `Semana ${janela}. Quantidades convertidas em unidades de fornecedor.`;
-  wsRes.getCell("A2").font = { name:'Arial', italic:true, size:10, color:{argb:'FF595959'} };
+  wsRes.getCell("A2").value = `Período: ${periodo || "(não informado)"}. Kits expandidos em unidades de fornecedor.`;
+  wsRes.getCell("A2").font = { name: "Arial", italic: true, size: 10, color: { argb: "FF595959" } };
   wsRes.mergeCells("A2:H2");
   const resHdr = wsRes.getRow(4);
-  resHdr.values = ["Grupo (SKU)","Descrição","Shopee","Mercado Livre","Amazon","Shein","Total Un. Fornecedor","Faturamento (R$)"];
-  styleHeader(resHdr, 8);
+  resHdr.values = ["Grupo (SKU)", "Descrição", "Shopee", "Mercado Livre", "Amazon", "Shein", "Total Un. Fornecedor", "Faturamento (R$)"];
+  styleHdr(resHdr, 8);
   const firstRes = 5;
   agregado.forEach(r => {
     const row = wsRes.addRow([r.grupo, r.descricao, r.shopee, r.ml, r.amazon, r.shein, r.total, r.faturamento]);
@@ -504,133 +597,104 @@ async function gerarXlsx(todos, agregado, janela) {
     for (let c = 1; c <= 8; c++) row.getCell(c).border = BORDER;
   });
   const lastRes = wsRes.lastRow.number;
-  const totRes = wsRes.addRow(["TOTAL FORNECEDOR","Unidades a pagar",
-    {formula:`SUM(C${firstRes}:C${lastRes})`}, {formula:`SUM(D${firstRes}:D${lastRes})`},
-    {formula:`SUM(E${firstRes}:E${lastRes})`}, {formula:`SUM(F${firstRes}:F${lastRes})`},
-    {formula:`SUM(G${firstRes}:G${lastRes})`}, {formula:`SUM(H${firstRes}:H${lastRes})`}]);
+  const totRes = wsRes.addRow(["TOTAL FORNECEDOR", "Unidades a pagar",
+    { formula: `SUM(C${firstRes}:C${lastRes})` }, { formula: `SUM(D${firstRes}:D${lastRes})` },
+    { formula: `SUM(E${firstRes}:E${lastRes})` }, { formula: `SUM(F${firstRes}:F${lastRes})` },
+    { formula: `SUM(G${firstRes}:G${lastRes})` }, { formula: `SUM(H${firstRes}:H${lastRes})` }]);
   for (let c = 3; c <= 7; c++) totRes.getCell(c).numFmt = "#,##0";
   totRes.getCell(8).numFmt = '"R$" #,##0.00';
   for (let c = 1; c <= 8; c++) {
     totRes.getCell(c).fill = TOTAL_FILL;
-    totRes.getCell(c).font = { name:'Arial', bold:true, size:11 };
+    totRes.getCell(c).font = { name: "Arial", bold: true, size: 11 };
     totRes.getCell(c).border = BORDER;
   }
+
   // Não-fornecedor
   wsRes.addRow([]); wsRes.addRow([]);
-  const lblRow = wsRes.addRow(["Vendas que NÃO entram no pagamento ao fornecedor"]);
-  lblRow.getCell(1).font = { name:'Arial', bold:true, size:12, color:{argb:'FFC00000'} };
-  wsRes.mergeCells(`A${lblRow.number}:H${lblRow.number}`);
-  const exclHdrRow = wsRes.addRow(["Grupo","Anúncio","Marketplace","Unidades","Faturamento","Motivo"]);
-  styleHeader(exclHdrRow, 6);
+  const lbl = wsRes.addRow(["Itens excluídos do pagamento (figurinhas, mochila, sem BS code)"]);
+  lbl.getCell(1).font = { name: "Arial", bold: true, size: 12, color: { argb: "FFC00000" } };
+  wsRes.mergeCells(`A${lbl.number}:H${lbl.number}`);
+  const exHdr = wsRes.addRow(["Origem", "Conta", "Anúncio", "SKU", "Variante", "Unidades", "Faturamento", "Motivo"]);
+  styleHdr(exHdr, 8);
   todos.filter(r => !r.incluiPagamento).forEach(r => {
-    const row = wsRes.addRow([r.grupo, r.produto, r.marketplace, r.unidades, r.faturamento, r.regra]);
-    row.getCell(4).numFmt = "#,##0";
-    row.getCell(5).numFmt = '"R$" #,##0.00';
-    for (let c = 1; c <= 6; c++) {
+    const row = wsRes.addRow([r.origem, r.conta, r.produto, r.sku, r.variante, r.unidades, r.faturamento, r.regra]);
+    row.getCell(6).numFmt = "#,##0"; row.getCell(7).numFmt = '"R$" #,##0.00';
+    for (let c = 1; c <= 8; c++) {
       row.getCell(c).fill = EXCL_FILL;
       row.getCell(c).border = BORDER;
     }
   });
-  wsRes.columns = [{width:16},{width:38},{width:14},{width:16},{width:12},{width:14},{width:18},{width:18}];
-  wsRes.views = [{state:'frozen', ySplit:4}];
+  wsRes.columns = [{ width: 16 }, { width: 32 }, { width: 14 }, { width: 18 }, { width: 16 }, { width: 12 }, { width: 16 }, { width: 30 }];
+  wsRes.views = [{ state: "frozen", ySplit: 4 }];
 
-  // ===== Aba 3: Detalhe por Anúncio =====
+  // ===== Aba Detalhe =====
   const wsDet = wb.addWorksheet("Detalhe por Anúncio");
-  wsDet.getCell("A1").value = "Detalhe por Anúncio — com multiplicador";
-  wsDet.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
-  wsDet.mergeCells("A1:R1");
-  wsDet.getCell("A2").value = "Verde = kit (mult > 1). Vermelho = não-fornecedor. Amarelo = grupo inferido.";
-  wsDet.getCell("A2").font = { name:'Arial', italic:true, size:10, color:{argb:'FF595959'} };
-  wsDet.mergeCells("A2:R2");
-  const detHdr = wsDet.getRow(4);
-  detHdr.values = ["Grupo","Descrição","Mapa","Paga?","Marketplace","Conta","Produto (Anúncio)","SKU","ID Anúncio",
-    "Pedidos","Unidades","Mult","Refil Extra","Un. Forn. (Principal)","Un. Forn. (Refil)","Regra Multiplicador",
-    "Faturamento (R$)","Preço Médio (R$)"];
-  styleHeader(detHdr, 18);
-  const ordered = [...todos].sort((a,b) => {
+  wsDet.getCell("A1").value = "Detalhe por Anúncio";
+  wsDet.getCell("A1").font = { name: "Arial", bold: true, size: 14, color: { argb: "FF1F4E78" } };
+  wsDet.mergeCells("A1:N1");
+  const detHdr = wsDet.getRow(3);
+  detHdr.values = ["Grupo", "Descrição", "Paga?", "Origem", "Conta", "ID Anúncio", "Produto", "SKU", "Variante", "Unidades", "Mult", "Un. Forn.", "Faturamento", "Regra"];
+  styleHdr(detHdr, 14);
+  const ordered = [...todos].sort((a, b) => {
     if (a.incluiPagamento !== b.incluiPagamento) return a.incluiPagamento ? -1 : 1;
     if (a.grupo !== b.grupo) return a.grupo.localeCompare(b.grupo);
-    return b.unFornecedor - a.unFornecedor;
+    return (b.unFornecedor || 0) - (a.unFornecedor || 0);
   });
   ordered.forEach(r => {
     const row = wsDet.addRow([
-      r.grupo, GRUPOS[r.grupo], r.inferido ? "Inferido" : "Direto",
+      r.grupo, GRUPOS[r.grupo] || r.grupo,
       r.incluiPagamento ? "Sim" : "Não",
-      r.marketplace, r.conta, r.produto, r.sku, String(r.idAnuncio),
-      r.pedidos, r.unidades, r.mult, r.refilExtra,
-      r.unFornecedor, r.unRefilExtra, r.regra,
-      r.faturamento, r.unidades > 0 ? r.faturamento / r.unidades : 0,
+      r.origem, r.conta, String(r.idAnuncio || ""), r.produto, r.sku, r.variante,
+      r.unidades, r.mult, r.unFornecedor || 0, r.faturamento, r.regra,
     ]);
-    [10,11,12,13,14,15].forEach(c => row.getCell(c).numFmt = "#,##0");
-    [17,18].forEach(c => row.getCell(c).numFmt = '"R$" #,##0.00');
+    [10, 11, 12].forEach(c => row.getCell(c).numFmt = "#,##0");
+    row.getCell(13).numFmt = '"R$" #,##0.00';
     let fill = null;
     if (!r.incluiPagamento) fill = EXCL_FILL;
     else if (r.mult > 1 || r.refilExtra > 0) fill = KIT_FILL;
-    else if (r.inferido) fill = INFER_FILL;
-    for (let c = 1; c <= 18; c++) {
+    for (let c = 1; c <= 14; c++) {
       row.getCell(c).border = BORDER;
       if (fill) row.getCell(c).fill = fill;
-      if ([10,11,12,13,14,15,17,18].includes(c)) row.getCell(c).alignment = { horizontal:'right' };
+      if ([10, 11, 12, 13].includes(c)) row.getCell(c).alignment = { horizontal: "right" };
     }
   });
-  wsDet.columns = [{width:9},{width:30},{width:10},{width:8},{width:14},{width:16},{width:50},{width:22},{width:16},
-    {width:8},{width:9},{width:6},{width:8},{width:12},{width:12},{width:38},{width:16},{width:16}];
-  wsDet.views = [{state:'frozen', ySplit:4}];
-  wsDet.autoFilter = { from: 'A4', to: `R${wsDet.lastRow.number}` };
+  wsDet.columns = [
+    { width: 10 }, { width: 28 }, { width: 8 }, { width: 14 }, { width: 12 },
+    { width: 18 }, { width: 50 }, { width: 26 }, { width: 18 },
+    { width: 10 }, { width: 6 }, { width: 12 }, { width: 14 }, { width: 30 },
+  ];
+  wsDet.views = [{ state: "frozen", ySplit: 3 }];
+  wsDet.autoFilter = { from: "A3", to: `N${wsDet.lastRow.number}` };
 
-  // ===== Aba 4: Regras =====
-  const wsReg = wb.addWorksheet("Regras e Mapeamento");
-  wsReg.getCell("A1").value = "Regras de Conversão para Unidades de Fornecedor";
-  wsReg.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
+  // ===== Aba Regras =====
+  const wsReg = wb.addWorksheet("Regras");
+  wsReg.getCell("A1").value = "Regras de Classificação";
+  wsReg.getCell("A1").font = { name: "Arial", bold: true, size: 14, color: { argb: "FF1F4E78" } };
   wsReg.mergeCells("A1:C1");
   const regHdr = wsReg.getRow(3);
-  regHdr.values = ["Grupo","Regra","Notas"];
-  styleHeader(regHdr, 3);
+  regHdr.values = ["Item", "Regra", "Notas"];
+  styleHdr(regHdr, 3);
   const regras = [
-    ["BS341 Barra de Apoio","Multiplica pelo nº de barras do kit (1, 2, 3 ou 4)","SKU 'BS341 - N BARRA' ou nome 'Kit N Barra(s)'/'Kit Duas Barras'"],
-    ["BS338 Caixa Organizador","Multiplica pelo nº de caixas do kit","SKU 'BS338 - N ORG' ou nome 'Kit N Caixa(s)'"],
-    ["BS327 Mop / BS328 Refil","Só Mop = 1 Mop. Mop+Refil = 1 Mop + 1 Refil. Só Refil = 1 par.","Cada 'refil' vendido = 1 par fornecedor"],
-    ["FIG2026 Figurinhas","NÃO conta no pagamento do fornecedor","Excluído"],
-    ["OUTROS","NÃO conta no pagamento do fornecedor","Sem vínculo identificado com o fornecedor"],
-    ["Demais grupos","1 venda = 1 unidade fornecedor","Varal, Sapateira, Guarda Roupa, etc."],
+    ["Identificação do grupo", "Extraído do SKU (ex.: 'BS341 - 2 BARRA' → BS341)", "Se SKU não tem BS code, usa o nome do produto"],
+    ["BS341 Barras", "Mult vem do SKU 'BS341 - N BARRA' ou nome 'Kit N Barras'", "1, 2, 3 ou 4 barras"],
+    ["BS338 Caixas", "Mult vem do SKU 'BS338 - N ORG' ou nome 'Kit N Caixas'", "1, 2 ou 4 caixas"],
+    ["BS327 Mop / BS328 Refil", "Só Mop = 1 Mop · Mop+Refil = 1+1 · Só Refil = 1 par", "Cada refil = 1 par fornecedor"],
+    ["Amazon BS324 - MOP SPRAY", "Reclassificado para BS327 (Mop)", "Caso especial da Amazon"],
+    ["Figurinhas (FIG2026)", "Excluídas do pagamento", "Não são do fornecedor"],
+    ["OUTROS", "Excluídas do pagamento", "Mochila Spider, etc."],
+    ["Demais grupos", "1 venda = 1 unidade fornecedor", "Varal, Sapateira, Guarda Roupa, etc."],
   ];
   regras.forEach(r => {
     const row = wsReg.addRow(r);
     for (let c = 1; c <= 3; c++) {
       row.getCell(c).border = BORDER;
-      row.getCell(c).alignment = { wrapText:true, vertical:'top' };
+      row.getCell(c).alignment = { wrapText: true, vertical: "top" };
     }
   });
-  wsReg.columns = [{width:26},{width:48},{width:55}];
+  wsReg.columns = [{ width: 26 }, { width: 48 }, { width: 55 }];
 
-  // ===== Fontes =====
-  const wsUp = wb.addWorksheet("Fonte Upseller");
-  wsUp.getCell("A1").value = "Dados originais Upseller";
-  wsUp.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
-  wsUp.mergeCells("A1:H1");
-  const upHdr = wsUp.getRow(3);
-  upHdr.values = ["Grupo","Marketplace","Produto","SKU","ID Anúncio","Pedidos","Unidades","Faturamento"];
-  styleHeader(upHdr, 8);
-  todos.filter(r => r.marketplace !== "Shein").forEach(r => {
-    const row = wsUp.addRow([r.grupo, r.marketplace, r.produto, r.sku, r.idAnuncio, r.pedidos, r.unidades, r.faturamento]);
-    row.getCell(6).numFmt = "#,##0"; row.getCell(7).numFmt = "#,##0"; row.getCell(8).numFmt = '"R$" #,##0.00';
-    for (let c = 1; c <= 8; c++) row.getCell(c).border = BORDER;
-  });
-  wsUp.columns = [{width:10},{width:14},{width:55},{width:28},{width:16},{width:10},{width:10},{width:16}];
-
-  const wsSh = wb.addWorksheet("Fonte Shein");
-  wsSh.getCell("A1").value = "Dados originais Shein";
-  wsSh.getCell("A1").font = { name:'Arial', bold:true, size:14, color:{argb:'FF1F4E78'} };
-  wsSh.mergeCells("A1:G1");
-  const shHdr = wsSh.getRow(3);
-  shHdr.values = ["Grupo","SKC","Fornecedor SKU","Nome do produto","Volume de Vendas","GMV"];
-  styleHeader(shHdr, 6);
-  todos.filter(r => r.marketplace === "Shein").forEach(r => {
-    const row = wsSh.addRow([r.grupo, r.idAnuncio, r.sku, r.produto, r.unidades, r.faturamento]);
-    row.getCell(5).numFmt = "#,##0"; row.getCell(6).numFmt = '"R$" #,##0.00';
-    for (let c = 1; c <= 6; c++) row.getCell(c).border = BORDER;
-  });
-  wsSh.columns = [{width:10},{width:22},{width:32},{width:55},{width:16},{width:18}];
+  // Reordena abas
+  // (Top já é a 1ª, Resumo 2ª, Detalhe 3ª, Regras 4ª)
 
   const buffer = await wb.xlsx.writeBuffer();
   return new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
@@ -639,8 +703,7 @@ async function gerarXlsx(todos, agregado, janela) {
 // ============================================================================
 // UI
 // ============================================================================
-const STATE = { files: {}, processed: null, slug: "semana", janela: "" };
-
+const STATE = { files: [], processed: null };
 const $ = sel => document.querySelector(sel);
 const dropzone = $("#dropzone");
 const fileInput = $("#file-input");
@@ -650,38 +713,30 @@ const processarBtn = $("#processar-btn");
 const resetBtn = $("#reset-btn");
 const resultSection = $("#result-section");
 const downloadBtn = $("#download-btn");
+const periodoInput = $("#periodo-input");
 
 dropzone.addEventListener("click", () => fileInput.click());
-["dragenter","dragover"].forEach(ev => dropzone.addEventListener(ev, e => {
-  e.preventDefault(); dropzone.classList.add("dragover");
-}));
-["dragleave","drop"].forEach(ev => dropzone.addEventListener(ev, e => {
-  e.preventDefault(); dropzone.classList.remove("dragover");
-}));
-dropzone.addEventListener("drop", e => {
-  e.preventDefault();
-  handleFiles([...e.dataTransfer.files]);
-});
+["dragenter", "dragover"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add("dragover"); }));
+["dragleave", "drop"].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove("dragover"); }));
+dropzone.addEventListener("drop", e => { e.preventDefault(); handleFiles([...e.dataTransfer.files]); });
 fileInput.addEventListener("change", e => handleFiles([...e.target.files]));
 
 async function handleFiles(fileList) {
   uploadMsg.innerHTML = "";
   for (const file of fileList) {
-    if (!file.name.toLowerCase().endsWith(".xlsx")) {
-      uploadMsg.innerHTML = `<div class="alert error">❌ "${file.name}" não é .xlsx</div>`;
+    const lower = file.name.toLowerCase();
+    if (!lower.endsWith(".xlsx") && !lower.endsWith(".csv")) {
+      uploadMsg.innerHTML += `<div class="alert error">❌ "${file.name}" não é .xlsx nem .csv</div>`;
       continue;
     }
     try {
-      const wb = await readXlsx(file);
-      const tipo = detectarTipo(wb);
-      if (!tipo) {
-        uploadMsg.innerHTML += `<div class="alert error">❌ "${file.name}" — não reconheci o formato (precisa ser Upseller ou Shein).</div>`;
-        continue;
-      }
-      STATE.files[tipo] = { name: file.name, workbook: wb };
-      if (tipo === "upseller") {
-        const [j, s] = janelaSemanal(file.name);
-        STATE.janela = j; STATE.slug = s;
+      const wb = await lerArquivo(file);
+      const formato = detectarFormato(wb, file.name);
+      if (!formato) {
+        STATE.files.push({ file, wb, formato: null, fileName: file.name });
+        uploadMsg.innerHTML += `<div class="alert warning">⚠️ "${file.name}" — não consegui identificar o formato. Adicionei como "desconhecido".</div>`;
+      } else {
+        STATE.files.push({ file, wb, formato, fileName: file.name });
       }
     } catch (err) {
       uploadMsg.innerHTML += `<div class="alert error">❌ Erro lendo "${file.name}": ${err.message}</div>`;
@@ -692,115 +747,116 @@ async function handleFiles(fileList) {
 
 function renderFiles() {
   filesList.innerHTML = "";
-  for (const tipo of ["upseller","shein"]) {
-    const slot = document.createElement("div");
-    slot.className = "file-card";
-    if (STATE.files[tipo]) {
-      slot.innerHTML = `<span class="source ${tipo}">${tipo === "upseller" ? "Upseller" : "Shein"}</span>
-        <div class="name">${STATE.files[tipo].name}</div>`;
-    } else {
-      slot.innerHTML = `<span class="source unknown">Aguardando ${tipo === "upseller" ? "Upseller" : "Shein"}</span>
-        <div class="name small">(arquivo ainda não enviado)</div>`;
-    }
-    filesList.appendChild(slot);
-  }
-  processarBtn.disabled = !(STATE.files.upseller && STATE.files.shein);
-  resetBtn.hidden = !(STATE.files.upseller || STATE.files.shein);
-  if (STATE.janela) {
-    uploadMsg.innerHTML += `<div class="alert info">📅 Janela detectada: <strong>${STATE.janela}</strong></div>`;
-  }
+  STATE.files.forEach((f, idx) => {
+    const div = document.createElement("div");
+    div.className = "file-slot " + (f.formato ? "filled" : "unknown");
+    const label = f.formato ? formatLabel(f.formato) : "Não identificado";
+    div.innerHTML = `<span class="remove" data-idx="${idx}" title="Remover">×</span>
+      <span class="tag">${label}</span>
+      <div class="name">${f.fileName}</div>`;
+    filesList.appendChild(div);
+  });
+  filesList.querySelectorAll(".remove").forEach(el => {
+    el.addEventListener("click", e => {
+      const idx = +e.target.dataset.idx;
+      STATE.files.splice(idx, 1);
+      renderFiles();
+    });
+  });
+  processarBtn.disabled = STATE.files.filter(f => f.formato).length === 0;
+  resetBtn.hidden = STATE.files.length === 0;
+}
+
+function formatLabel(f) {
+  return { amazon: "Amazon", ml: "Mercado Livre", shopee: "Shopee", shein: "Shein" }[f] || f;
 }
 
 processarBtn.addEventListener("click", () => {
   try {
-    const up = processaUpseller(STATE.files.upseller.workbook);
-    const sh = processaShein(STATE.files.shein.workbook);
-    const todos = [...up, ...sh];
-    const agregado = agregaFornecedor(todos);
-    STATE.processed = { todos, agregado };
+    const todos = [];
+    for (const f of STATE.files) {
+      if (!f.formato) continue;
+      let rows = [];
+      if (f.formato === "amazon") rows = parseAmazon(f.wb, f.fileName);
+      else if (f.formato === "ml") rows = parseML(f.wb, f.fileName);
+      else if (f.formato === "shopee") rows = parseShopee(f.wb, f.fileName);
+      else if (f.formato === "shein") rows = parseShein(f.wb, f.fileName);
+      todos.push(...rows);
+    }
+    if (todos.length === 0) {
+      uploadMsg.innerHTML = `<div class="alert error">❌ Nenhum dado pôde ser extraído dos arquivos.</div>`;
+      return;
+    }
+    const agregado = consolidar(todos);
+    STATE.processed = { todos, agregado, periodo: periodoInput.value.trim() };
     renderResultado();
   } catch (err) {
-    uploadMsg.innerHTML = `<div class="alert error">❌ Erro ao processar: ${err.message}</div>`;
+    uploadMsg.innerHTML = `<div class="alert error">❌ Erro: ${err.message}</div>`;
     console.error(err);
   }
 });
 
 resetBtn.addEventListener("click", () => {
-  STATE.files = {}; STATE.processed = null; STATE.slug = "semana"; STATE.janela = "";
+  STATE.files = []; STATE.processed = null;
   fileInput.value = "";
   filesList.innerHTML = "";
   uploadMsg.innerHTML = "";
   resultSection.hidden = true;
   processarBtn.disabled = true;
   resetBtn.hidden = true;
+  periodoInput.value = "";
 });
 
-function fmtBR(n) {
-  return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-function fmtRS(n) {
-  return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-function fmtPct(n) {
-  return (n*100).toFixed(1) + "%";
-}
+function fmtBR(n) { return n.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+function fmtRS(n) { return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtPct(n) { return (n * 100).toFixed(1) + "%"; }
 
 function renderResultado() {
-  const { todos, agregado } = STATE.processed;
-  $("#periodo").textContent = STATE.janela ? "· " + STATE.janela : "";
-
-  const totalUn = agregado.reduce((s,r)=>s+r.total,0);
-  const totalFat = agregado.reduce((s,r)=>s+r.faturamento,0);
-  const exclUn = todos.filter(r=>!r.incluiPagamento).reduce((s,r)=>s+r.unidades,0);
-  const exclFat = todos.filter(r=>!r.incluiPagamento).reduce((s,r)=>s+r.faturamento,0);
-
-  $("#kpis").innerHTML = `
-    <div class="kpi"><div class="label">Total Un. Fornecedor</div><div class="value">${fmtBR(totalUn)}</div></div>
-    <div class="kpi"><div class="label">Faturamento Fornecedor</div><div class="value">${fmtRS(totalFat)}</div></div>
-    <div class="kpi excl"><div class="label">Excluídas (não-fornecedor)</div><div class="value">${fmtBR(exclUn)} un · ${fmtRS(exclFat)}</div></div>
-    <div class="kpi"><div class="label">Anúncios processados</div><div class="value">${fmtBR(todos.length)}</div></div>`;
-
-  // Tabela resumo
-  let html = `<table><thead><tr>
-    <th>Grupo</th><th>Descrição</th><th class="num">Shopee</th><th class="num">ML</th>
-    <th class="num">Amazon</th><th class="num">Shein</th><th class="num">Total</th><th class="num">Faturamento</th>
-  </tr></thead><tbody>`;
-  for (const r of agregado) {
-    html += `<tr><td>${r.grupo}</td><td>${r.descricao}</td>
-      <td class="num">${fmtBR(r.shopee)}</td><td class="num">${fmtBR(r.ml)}</td>
-      <td class="num">${fmtBR(r.amazon)}</td><td class="num">${fmtBR(r.shein)}</td>
-      <td class="num"><strong>${fmtBR(r.total)}</strong></td>
-      <td class="num">${fmtRS(r.faturamento)}</td></tr>`;
-  }
-  html += `<tr class="total"><td colspan="6">TOTAL FORNECEDOR</td>
-    <td class="num">${fmtBR(totalUn)}</td><td class="num">${fmtRS(totalFat)}</td></tr></tbody></table>`;
-  $("#tabela-resumo").innerHTML = html;
-
-  // Top 5
-  let topHtml = `<table><thead><tr>
-    <th>#</th><th>Grupo</th><th>Descrição</th><th class="num">Un.</th><th class="num">% Un.</th><th class="num">% Fat.</th>
-  </tr></thead><tbody>`;
-  agregado.slice(0,5).forEach((r,i) => {
-    topHtml += `<tr><td>${i+1}</td><td>${r.grupo}</td><td>${r.descricao}</td>
-      <td class="num"><strong>${fmtBR(r.total)}</strong></td>
-      <td class="num">${fmtPct(totalUn>0 ? r.total/totalUn : 0)}</td>
-      <td class="num">${fmtPct(totalFat>0 ? r.faturamento/totalFat : 0)}</td></tr>`;
-  });
-  topHtml += `</tbody></table>`;
-  $("#tabela-top").innerHTML = topHtml;
-
-  // Excluídas
+  const { todos, agregado, periodo } = STATE.processed;
+  document.querySelector("#periodo-display").textContent = periodo ? "· " + periodo : "";
+  const totalUn = agregado.reduce((s, r) => s + r.total, 0);
+  const totalFat = agregado.reduce((s, r) => s + r.faturamento, 0);
   const excl = todos.filter(r => !r.incluiPagamento);
-  let exHtml = `<table><thead><tr>
-    <th>Grupo</th><th>Anúncio</th><th>Marketplace</th><th class="num">Unidades</th><th class="num">Faturamento</th><th>Motivo</th>
-  </tr></thead><tbody>`;
-  excl.forEach(r => {
-    exHtml += `<tr class="excl"><td>${r.grupo}</td><td>${r.produto}</td><td>${r.marketplace}</td>
-      <td class="num">${fmtBR(r.unidades)}</td><td class="num">${fmtRS(r.faturamento)}</td><td>${r.regra}</td></tr>`;
+  const exclUn = excl.reduce((s, r) => s + r.unidades, 0);
+  const exclFat = excl.reduce((s, r) => s + r.faturamento, 0);
+
+  document.querySelector("#kpis").innerHTML =
+    '<div class="kpi"><div class="label">Total Un. Fornecedor</div><div class="value">' + fmtBR(totalUn) + '</div></div>' +
+    '<div class="kpi"><div class="label">Faturamento Fornecedor</div><div class="value">' + fmtRS(totalFat) + '</div></div>' +
+    '<div class="kpi excl"><div class="label">Excluídas (não-fornecedor)</div><div class="value">' + fmtBR(exclUn) + ' un · ' + fmtRS(exclFat) + '</div></div>' +
+    '<div class="kpi"><div class="label">Linhas processadas</div><div class="value">' + fmtBR(todos.length) + '</div></div>';
+
+  let html = '<table><thead><tr><th>Grupo</th><th>Descrição</th><th class="num">Shopee</th><th class="num">ML</th><th class="num">Amazon</th><th class="num">Shein</th><th class="num">Total</th><th class="num">Faturamento</th></tr></thead><tbody>';
+  for (const r of agregado) {
+    html += '<tr><td>' + r.grupo + '</td><td>' + r.descricao + '</td>' +
+      '<td class="num">' + fmtBR(r.shopee) + '</td><td class="num">' + fmtBR(r.ml) + '</td>' +
+      '<td class="num">' + fmtBR(r.amazon) + '</td><td class="num">' + fmtBR(r.shein) + '</td>' +
+      '<td class="num"><strong>' + fmtBR(r.total) + '</strong></td>' +
+      '<td class="num">' + fmtRS(r.faturamento) + '</td></tr>';
+  }
+  html += '<tr class="total"><td colspan="6">TOTAL FORNECEDOR</td><td class="num">' + fmtBR(totalUn) + '</td><td class="num">' + fmtRS(totalFat) + '</td></tr></tbody></table>';
+  document.querySelector("#tabela-resumo").innerHTML = html;
+
+  let topHtml = '<table><thead><tr><th>#</th><th>Grupo</th><th>Descrição</th><th class="num">Un.</th><th class="num">% Un.</th><th class="num">% Fat.</th></tr></thead><tbody>';
+  agregado.slice(0, 10).forEach((r, i) => {
+    topHtml += '<tr><td>' + (i + 1) + '</td><td>' + r.grupo + '</td><td>' + r.descricao + '</td>' +
+      '<td class="num"><strong>' + fmtBR(r.total) + '</strong></td>' +
+      '<td class="num">' + fmtPct(totalUn ? r.total / totalUn : 0) + '</td>' +
+      '<td class="num">' + fmtPct(totalFat ? r.faturamento / totalFat : 0) + '</td></tr>';
   });
-  if (excl.length === 0) exHtml += `<tr><td colspan="6" style="text-align:center;color:#666;">Nenhuma exclusão</td></tr>`;
-  exHtml += `</tbody></table>`;
-  $("#tabela-excl").innerHTML = exHtml;
+  topHtml += '</tbody></table>';
+  document.querySelector("#tabela-top").innerHTML = topHtml;
+
+  let exHtml = '<table><thead><tr><th>Origem</th><th>Conta</th><th>Anúncio</th><th>SKU</th><th class="num">Un.</th><th class="num">Fat.</th><th>Motivo</th></tr></thead><tbody>';
+  excl.forEach(r => {
+    exHtml += '<tr class="excl"><td>' + r.origem + '</td><td>' + r.conta + '</td>' +
+      '<td>' + r.produto.slice(0, 60) + '</td><td>' + r.sku + '</td>' +
+      '<td class="num">' + fmtBR(r.unidades) + '</td><td class="num">' + fmtRS(r.faturamento) + '</td>' +
+      '<td>' + r.regra + '</td></tr>';
+  });
+  if (excl.length === 0) exHtml += '<tr><td colspan="7" style="text-align:center;color:#666;">Nenhuma exclusão</td></tr>';
+  exHtml += '</tbody></table>';
+  document.querySelector("#tabela-excl").innerHTML = exHtml;
 
   resultSection.hidden = false;
   resultSection.scrollIntoView({ behavior: "smooth" });
@@ -810,8 +866,10 @@ downloadBtn.addEventListener("click", async () => {
   downloadBtn.disabled = true;
   downloadBtn.textContent = "Gerando .xlsx...";
   try {
-    const blob = await gerarXlsx(STATE.processed.todos, STATE.processed.agregado, STATE.janela || "(sem data)");
-    saveAs(blob, `Vendas_Consolidadas_Fornecedor_${STATE.slug}.xlsx`);
+    const { todos, agregado, periodo } = STATE.processed;
+    const blob = await gerarXlsx(todos, agregado, periodo);
+    const slug = (periodo || "consolidado").replace(/[^\w\-]/g, "_").slice(0, 40);
+    saveAs(blob, "Vendas_Consolidadas_" + slug + ".xlsx");
   } catch (err) {
     alert("Erro ao gerar .xlsx: " + err.message);
     console.error(err);
@@ -821,9 +879,8 @@ downloadBtn.addEventListener("click", async () => {
   }
 });
 
-// Exporta para testes Node
 if (typeof module !== "undefined") {
-  module.exports = { GRUPOS, EXCLUI_FORNECEDOR, detectaGrupo, inferMultiplicador, processaUpseller, processaShein, agregaFornecedor };
+  module.exports = { GRUPOS, EXCLUI_FORNECEDOR, classifica, parseAmazon, parseML, parseShopee, parseShein, consolidar, detectarFormato };
 }
 </script>
 </body>
