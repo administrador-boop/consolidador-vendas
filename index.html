@@ -177,6 +177,7 @@ const GRUPOS = {
   "BS328": "Refil de Mop (par)",
   "BS332": "Guarda Sol VariTudo",
   "BS336": "Arara 4 Colunas / Cabideiro",
+  "BS337": "Sapateira 55 Pares",
   "BS338": "Caixa Organizador de Guarda Roupas",
   "BS339": "Parafusadeira/Furadeira 21V",
   "BS340": "Chave de Impacto 48V",
@@ -221,6 +222,7 @@ function classifica(sku, nome) {
     else if (s.includes("varal") || n.includes("varal")) grupo = "BS600";
     else if (s.includes("guarda roupa dobr") || n.includes("guarda roupa dobr")) grupo = "BS105";
     else if (s.includes("4 colunas") || n.includes("4 colunas")) grupo = "BS336";
+    else if (s.includes("sapateira 55") || s.includes("55 pares") || n.includes("55 pares")) grupo = "BS337";
     else if (s.includes("sapateira 20") || n.includes("sapateira vertical") || n.includes("10 andares")) grupo = "BS325";
     else if (s.includes("sapateira cabideiro") || (n.includes("sapateira") && n.includes("cabideiro")) || (n.includes("sapateira") && (n.includes("4 prateleira") || n.includes("5 prateleira") || n.includes("4 andar")))) grupo = "BS324";
     else if ((s.includes("mop") && !s.includes("refil")) || (n.includes("mop spray") && !n.includes("refil"))) grupo = "BS327";
