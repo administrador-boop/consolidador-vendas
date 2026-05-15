@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -65,6 +66,16 @@
   .kpi .value { font-size: 22px; font-weight: 700; color: #1F4E78; margin-top: 4px; }
   .kpi.excl { border-left-color: #c00; }
   .kpi.excl .value { color: #c00; }
+  .kpi.amazon { border-left-color: #FF9900; }
+  .kpi.ml { border-left-color: #FFE600; }
+  .kpi.shopee { border-left-color: #EE4D2D; }
+  .kpi.shein { border-left-color: #000000; }
+  .kpi .sub { font-size: 11px; color: #888; margin-top: 4px; }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 24px 0; }
+  @media (max-width: 800px) { .charts-grid { grid-template-columns: 1fr; } }
+  .chart-box { background: #f9fbfd; border-radius: 8px; padding: 18px; }
+  .chart-box h4 { margin: 0 0 12px; color: #1F4E78; font-size: 14px; }
+  .chart-box canvas { max-height: 280px; }
   .legend { display: flex; gap: 16px; font-size: 12px; margin-top: 8px; flex-wrap: wrap; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
@@ -113,6 +124,25 @@
   <section class="card" id="result-section" hidden>
     <h2>3. Resultado <span id="periodo-display" class="small" style="font-weight:normal;color:#666;"></span></h2>
     <div class="summary-grid" id="kpis"></div>
+
+    <h3>Vendas por loja</h3>
+    <div class="summary-grid" id="kpis-loja"></div>
+
+    <div class="charts-grid">
+      <div class="chart-box">
+        <h4>Distribuição por marketplace (% unidades)</h4>
+        <canvas id="chart-pizza"></canvas>
+      </div>
+      <div class="chart-box">
+        <h4>Faturamento por marketplace</h4>
+        <canvas id="chart-fat"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-box" style="margin: 24px 0;">
+      <h4>Top 10 produtos por marketplace (unidades fornecedor)</h4>
+      <canvas id="chart-top" style="max-height:340px !important;"></canvas>
+    </div>
 
     <h3>Total por produto-fornecedor (kits já expandidos)</h3>
     <div class="table-wrap" id="tabela-resumo"></div>
@@ -813,6 +843,77 @@ function fmtBR(n) { return n.toLocaleString("pt-BR", { minimumFractionDigits: 0,
 function fmtRS(n) { return "R$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtPct(n) { return (n * 100).toFixed(1) + "%"; }
 
+const COLORS_MP = { "Amazon": "#FF9900", "Mercado Livre": "#FFE600", "Shopee": "#EE4D2D", "Shein": "#000000" };
+
+let CHARTS = { pizza: null, fat: null, top: null };
+
+function renderChartsMarketplace(todos, agregado) {
+  // Destrói gráficos anteriores se houver
+  Object.values(CHARTS).forEach(c => c && c.destroy());
+
+  // Agregação por marketplace (somando contas)
+  const porMp = { "Shopee": 0, "Mercado Livre": 0, "Amazon": 0, "Shein": 0 };
+  const fatMp = { "Shopee": 0, "Mercado Livre": 0, "Amazon": 0, "Shein": 0 };
+  todos.filter(r => r.incluiPagamento).forEach(r => {
+    porMp[r.origem] = (porMp[r.origem] || 0) + r.unFornecedor;
+    fatMp[r.origem] = (fatMp[r.origem] || 0) + r.faturamento;
+  });
+  const mpLabels = Object.keys(porMp).filter(k => porMp[k] > 0);
+  const mpValues = mpLabels.map(k => porMp[k]);
+  const mpFat = mpLabels.map(k => fatMp[k]);
+  const mpColors = mpLabels.map(k => COLORS_MP[k] || "#999");
+
+  // Pizza — % unidades
+  CHARTS.pizza = new Chart(document.getElementById("chart-pizza"), {
+    type: "doughnut",
+    data: { labels: mpLabels, datasets: [{ data: mpValues, backgroundColor: mpColors, borderWidth: 2, borderColor: "#fff" }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: "bottom", labels: { font: { size: 12 } } },
+        tooltip: { callbacks: { label: ctx => {
+          const total = ctx.dataset.data.reduce((a,b)=>a+b,0);
+          const pct = total ? (ctx.parsed / total * 100).toFixed(1) : 0;
+          return ctx.label + ": " + fmtBR(ctx.parsed) + " un (" + pct + "%)";
+        }}}
+      }
+    }
+  });
+
+  // Barras horizontais — Faturamento por marketplace
+  CHARTS.fat = new Chart(document.getElementById("chart-fat"), {
+    type: "bar",
+    data: { labels: mpLabels, datasets: [{ label: "Faturamento (R$)", data: mpFat, backgroundColor: mpColors, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => fmtRS(ctx.parsed.x) } }
+      },
+      scales: { x: { ticks: { callback: v => "R$ " + (v >= 1000 ? (v/1000).toFixed(1) + "k" : v) } } }
+    }
+  });
+
+  // Top 10 produtos com barras empilhadas por marketplace
+  const top10 = agregado.slice(0, 10);
+  const labels10 = top10.map(r => r.grupo + " · " + r.descricao.slice(0, 22));
+  CHARTS.top = new Chart(document.getElementById("chart-top"), {
+    type: "bar",
+    data: {
+      labels: labels10,
+      datasets: [
+        { label: "Shopee", data: top10.map(r => r.shopee), backgroundColor: COLORS_MP["Shopee"] },
+        { label: "Mercado Livre", data: top10.map(r => r.ml), backgroundColor: COLORS_MP["Mercado Livre"] },
+        { label: "Amazon", data: top10.map(r => r.amazon), backgroundColor: COLORS_MP["Amazon"] },
+        },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: "y",
+      plugins: { legend: { position: "bottom" }, tooltip: { mode: "index", intersect: false } },
+      scales: { x: { stacked: true, beginAtZero: true }, y: { stacked: true } }
+    }
+  });
+}
+
 function renderResultado() {
   const { todos, agregado, periodo } = STATE.processed;
   document.querySelector("#periodo-display").textContent = periodo ? "· " + periodo : "";
@@ -828,6 +929,26 @@ function renderResultado() {
     '<div class="kpi excl"><div class="label">Excluídas (não-fornecedor)</div><div class="value">' + fmtBR(exclUn) + ' un · ' + fmtRS(exclFat) + '</div></div>' +
     '<div class="kpi"><div class="label">Linhas processadas</div><div class="value">' + fmtBR(todos.length) + '</div></div>';
 
+  // KPIs por loja
+  const porLoja = {};
+  todos.filter(r => r.incluiPagamento).forEach(r => {
+    const key = r.origem + "|" + r.conta;
+    if (!porLoja[key]) porLoja[key] = { origem: r.origem, conta: r.conta, un: 0, fat: 0 };
+    porLoja[key].un += r.unFornecedor;
+    porLoja[key].fat += r.faturamento;
+  });
+  const lojas = Object.values(porLoja).sort((a, b) => b.un - a.un);
+  const cssClass = o => ({ "Amazon": "amazon", "Mercado Livre": "ml", "Shopee": "shopee", "Shein": "shein" }[o] || "");
+  document.querySelector("#kpis-loja").innerHTML = lojas.map(l =>
+    '<div class="kpi ' + cssClass(l.origem) + '"><div class="label">' + l.origem + ' · ' + l.conta + '</div>' +
+    '<div class="value">' + fmtBR(l.un) + ' un</div>' +
+    '<div class="sub">' + fmtRS(l.fat) + '</div></div>'
+  ).join("");
+
+  // Gráficos
+  renderChartsMarketplace(todos, agregado);
+
+  // Tabela resumo
   let html = '<table><thead><tr><th>Grupo</th><th>Descrição</th><th class="num">Shopee</th><th class="num">ML</th><th class="num">Amazon</th><th class="num">Shein</th><th class="num">Total</th><th class="num">Faturamento</th></tr></thead><tbody>';
   for (const r of agregado) {
     html += '<tr><td>' + r.grupo + '</td><td>' + r.descricao + '</td>' +
@@ -839,6 +960,7 @@ function renderResultado() {
   html += '<tr class="total"><td colspan="6">TOTAL FORNECEDOR</td><td class="num">' + fmtBR(totalUn) + '</td><td class="num">' + fmtRS(totalFat) + '</td></tr></tbody></table>';
   document.querySelector("#tabela-resumo").innerHTML = html;
 
+  // Top 10
   let topHtml = '<table><thead><tr><th>#</th><th>Grupo</th><th>Descrição</th><th class="num">Un.</th><th class="num">% Un.</th><th class="num">% Fat.</th></tr></thead><tbody>';
   agregado.slice(0, 10).forEach((r, i) => {
     topHtml += '<tr><td>' + (i + 1) + '</td><td>' + r.grupo + '</td><td>' + r.descricao + '</td>' +
@@ -849,6 +971,7 @@ function renderResultado() {
   topHtml += '</tbody></table>';
   document.querySelector("#tabela-top").innerHTML = topHtml;
 
+  // Excluídas
   let exHtml = '<table><thead><tr><th>Origem</th><th>Conta</th><th>Anúncio</th><th>SKU</th><th class="num">Un.</th><th class="num">Fat.</th><th>Motivo</th></tr></thead><tbody>';
   excl.forEach(r => {
     exHtml += '<tr class="excl"><td>' + r.origem + '</td><td>' + r.conta + '</td>' +
